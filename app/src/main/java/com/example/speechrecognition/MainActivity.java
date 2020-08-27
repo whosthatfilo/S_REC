@@ -1,18 +1,23 @@
 package com.example.speechrecognition;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,16 +29,43 @@ public class MainActivity extends AppCompatActivity {
     List<String> wordBank = new ArrayList<>();
     List<String> responses = new ArrayList<>();
 
+    EditText Et1, Et3;
+    Button Btn;
+    TextView tv;
+
     boolean word = false;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         mTextTv = (TextView) findViewById(R.id.textTv);
         mTextResponses = (TextView) findViewById(R.id.textTv);
         mVoiceBtn = (ImageButton) findViewById(R.id.voiceBtn);
+
+        Et1 = (EditText)findViewById(R.id.et1);
+        Et3 = (EditText)findViewById(R.id.et3);
+        Btn = (Button)findViewById(R.id.btn);
+        tv = (TextView)findViewById(R.id.text_view);
+
+        if (!Python.isStarted())
+            Python.start(new AndroidPlatform(this));
+
+        Python py = Python.getInstance();
+        final PyObject pyobj = py.getModule("test_python"); //here we will give name of our python file
+
+        Btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //function name                           //first argument         //second argument
+                PyObject obj = pyobj.callAttr("main",Et1.getText().toString(),Et3.getText().toString());
+
+                //now obj will continue our result, so set its result to textView
+                tv.setText(obj.toString());
+
+            }
+        });
 
         //create array list and connect it to xml file
         wordBank = Arrays.asList(getResources().getStringArray(R.array.Words));
@@ -67,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
-
 
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
